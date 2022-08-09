@@ -3,38 +3,38 @@ const BROKER_LIST = '9.1.187.186:9092,9.1.187.187:9092,9.1.187.188:9092,9.1.187.
 const GROUP_ID = 'khw_kfk_1';
 const USER_NAME = 'user3700';
 const PASSWORD = 'user3700_aBwHCUnb';
-const SESS_TIME_OUT = '10000';
+const SESS_TIME_OUT = '60000';
+const BLOCK_TIME    = 10000;
 
 $conf = new RdKafka\Conf();
 $conf->set('bootstrap.servers', BROKER_LIST);
 $conf->set('group.id', GROUP_ID);
 $conf->set('enable.partition.eof', 'true');
 $conf->set('enable.auto.commit', 'false');
+$conf->set('auto.offset.reset', 'earliest');
 $conf->set('security.protocol', 'SASL_PLAINTEXT');
 $conf->set('sasl.mechanisms', 'SCRAM-SHA-256');
 $conf->set('sasl.username', USER_NAME);
 $conf->set('sasl.password', PASSWORD);
 $conf->set('session.timeout.ms', SESS_TIME_OUT);
-$rk = new RdKafka\Consumer($conf);
-$rk->addBrokers(BROKER_LIST);
 
-$topicConf = new RdKafka\TopicConf();
-$topicConf->set('auto.offset.reset', 'latest');
-$topic = $rk->newTopic(USER_NAME, $topicConf);
-$topic->consumeStart(0, RD_KAFKA_OFFSET_STORED);
+$consumer = new RdKafka\KafkaConsumer($conf);
+$consumer->subscribe(array(USER_NAME));
 
-$message = $topic->consume(0, 200);
-var_dump( $message );
+$message = $consumer->consume(BLOCK_TIME);
+switch ($message->err) {
+    case RD_KAFKA_RESP_ERR_NO_ERROR:
+        var_dump( $message );
+        $consumer->commit(NULL);
+        break;
+    case RD_KAFKA_RESP_ERR__PARTITION_EOF:
+        echo "No more messages; will wait for more\n";
+        break;
+    case RD_KAFKA_RESP_ERR__TIMED_OUT:
+        echo "Timed out. Quit\n";
+        break;
+    default:
+        throw new \Exception($message->errstr(), $message->err);
+}
 
-$topic->consumeStop(0);
-
-
-
-
-
-
-
-
-
-
-
+$consumer->close();
