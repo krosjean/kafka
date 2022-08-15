@@ -21,12 +21,14 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 
 $consumer = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(array(TOPIC_NAME));
-
-for ($i = 0; $i < 5; ++$i) {
+$arr_payload = array();
+while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
             var_dump($message);
+            $arr_payload = json_decode($message->payload, true);
+
             $consumer->commit($message);
             $consumer->unsubscribe();
             $consumer->close();
