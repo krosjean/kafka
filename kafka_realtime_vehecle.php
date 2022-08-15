@@ -22,18 +22,21 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 $consumer = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(array(TOPIC_NAME));
 
-while (true) {
+for ($i = 0; $i < 5; ++$i) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
             var_dump($message);
             $consumer->commit($message);
+            $consumer->unsubscribe();
+            $consumer->close();
+            exit(0);
             break;
         case RD_KAFKA_RESP_ERR__PARTITION_EOF:
         case RD_KAFKA_RESP_ERR__TIMED_OUT:
            break;
         default:
-            $consumer->unsubscribe(array(TOPIC_NAME));
+            $consumer->unsubscribe();
             $consumer->close();
             throw new \Exception($message->errstr(), $message->err);
     }
