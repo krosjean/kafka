@@ -12,7 +12,7 @@ const DATABASE          = 'SDORACLE19C';
 const DBUSERNAME        = 'C##ORCL200_CUSER';
 const DBPASSWORD        = 'BLZ2lIzv3z';
 const KFKRAWTABLE       = 'REALTIME_KFK_RAW';
-const MAXPAYLOADLEN     = 2000;
+const MAXPAYLOADLEN     = 4000;
 
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
 $stmt = 'INSERT INTO ' . KFKRAWTABLE . ' (MESSAGE) VALUES (:p)';
