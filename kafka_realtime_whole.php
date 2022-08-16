@@ -11,16 +11,17 @@ const DEFAULTCHARSET    = 'UTF8';
 const DATABASE          = 'SDORACLE19C';
 const DBUSERNAME        = 'C##ORCL200_CUSER';
 const DBPASSWORD        = 'BLZ2lIzv3z';
-const KFKRAWTABLE          = 'REALTIME_KFK_RAW';
+const KFKRAWTABLE       = 'REALTIME_KFK_RAW';
+const MAXPAYLOADLEN     = 2000;
 
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
-$stmt = "insert into {KFKRAWTABLE} values (:p)";
+$stmt = 'INSERT INTO ' . KFKRAWTABLE . ' (MESSAGE) VALUES (:p)';
 $stid = oci_parse($conn, $stmt);
 $payload = '';
-if (!oci_bind_by_name($stid, ':p', $payload) ) {
+if (!oci_bind_by_name($stid, ':p', $payload, MAXPAYLOADLEN)) {
     oci_free_statement($stid);
     oci_close($conn);
-    echo 'Bind error.'.PHP_EOL;
+    echo "Bind error.\n";
     exit(0);
 }
 
@@ -38,25 +39,31 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 
 $consumer = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(TOPIC_LIST);
-$arr_payload = array();
+$i = 0;
 while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
-            var_dump($message);
-            $arr_payload = json_decode($message->payload, true);
-
+            $payload = $message->payload;
+            if (!oci_execute($stid)) {
+                echo "insert error\n";
+                break 2;
+            }
             $consumer->commit($message);
-            $consumer->unsubscribe();
-            $consumer->close();
-            exit(0);
             break;
         case RD_KAFKA_RESP_ERR__PARTITION_EOF:
         case RD_KAFKA_RESP_ERR__TIMED_OUT:
-           break;
+            break;
         default:
-            $consumer->unsubscribe();
-            $consumer->close();
-            throw new RdKafka\Exception($message->errstr(), $message->err);
+            echo "Rd error:{$message->err}\n{$message->errstr()}\n";
+            break 2;
+    }
+    if (++$i == 5) {
+        break;
     }
 }
+
+oci_free_statement($stid);
+oci_close($conn);
+$consumer->unsubscribe();
+$consumer->close();
