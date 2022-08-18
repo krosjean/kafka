@@ -11,19 +11,66 @@ const DEFAULTCHARSET    = 'UTF8';
 const DATABASE          = 'SDORACLE19C';
 const DBUSERNAME        = 'C##ORCL200_CUSER';
 const DBPASSWORD        = 'BLZ2lIzv3z';
-const KFKRAWTABLE       = 'REALTIME_KFK_RAW';
-const MAXPAYLOADLEN     = 4000;
+const MSG_TABLE_MAP     = ['carpolicy'=>'REALTIME_KAFKA_CAR'];
 
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
-$stmt = 'INSERT INTO ' . KFKRAWTABLE . ' (MESSAGE) VALUES (:p)';
-$stid = oci_parse($conn, $stmt);
-$payload = '';
-if (!oci_bind_by_name($stid, ':p', $payload, MAXPAYLOADLEN)) {
-    oci_free_statement($stid);
-    oci_close($conn);
-    echo "Bind error.\n";
-    exit(0);
-}
+
+$stmt = 'INSERT INTO REALTIME_KAFKA_CAR VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26)';
+$stid1 = oci_parse($conn, $stmt);
+
+$b_systemcode = '';
+$b_sendtime = '';
+$b_msgcode = '';
+$b_policyno = '';
+$b_riskcode = '';
+$b_underwriteedndate = '';
+$b_newchnltype = '';
+$b_agentcode = '';
+$b_agentname = '';
+$b_startdate = '';
+$b_enddate = '';
+$b_businessnature = '';
+$b_carkindcode = '';
+$b_usenaturecode = '';
+$b_licenseno = '';
+$b_modelcode = '';
+$b_frameno = '';
+$b_comcode = '';
+$b_comname = '';
+$b_appliname = '';
+$b_insuredname = '';
+$b_newpolicyflag = '';
+$b_autotransrenewflag = '';
+$b_transferpolicyflag = '';
+$b_sumpremium = '';
+$b_artifselfpricesrat = '';
+
+oci_bind_by_name($stid1, ':p1',  $b_systemcode, 10);
+oci_bind_by_name($stid1, ':p2',  $b_sendtime,20);
+oci_bind_by_name($stid1, ':p3',  $b_msgcode, 20);
+oci_bind_by_name($stid1, ':p4',  $b_policyno, 150);
+oci_bind_by_name($stid1, ':p5',  $b_riskcode,150);
+oci_bind_by_name($stid1, ':p6',  $b_underwriteedndate, 20);
+oci_bind_by_name($stid1, ':p7',  $b_newchnltype, 192);
+oci_bind_by_name($stid1, ':p8',  $b_agentcode, 30);
+oci_bind_by_name($stid1, ':p9',  $b_agentname, 210);
+oci_bind_by_name($stid1, ':p10', $b_startdate, 20);
+oci_bind_by_name($stid1, ':p11', $b_enddate, 20);
+oci_bind_by_name($stid1, ':p12', $b_businessnature, 10);
+oci_bind_by_name($stid1, ':p13', $b_carkindcode, 4);
+oci_bind_by_name($stid1, ':p14', $b_usenaturecode, 2);
+oci_bind_by_name($stid1, ':p15', $b_licenseno, 96);
+oci_bind_by_name($stid1, ':p16', $b_modelcode, 60);
+oci_bind_by_name($stid1, ':p17', $b_frameno, 96);
+oci_bind_by_name($stid1, ':p18', $b_comcode, 30);
+oci_bind_by_name($stid1, ':p19', $b_comname, 384);
+oci_bind_by_name($stid1, ':p20', $b_appliname, 384);
+oci_bind_by_name($stid1, ':p21', $b_insuredname, 384);
+oci_bind_by_name($stid1, ':p22', $b_newpolicyflag, 1);
+oci_bind_by_name($stid1, ':p23', $b_autotransrenewflag, 1);
+oci_bind_by_name($stid1, ':p24', $b_transferpolicyflag, 1);
+oci_bind_by_name($stid1, ':p25', $b_sumpremium, 21);
+oci_bind_by_name($stid1, ':p26', $b_artifselfpricesrat, 5);
 
 $conf = new RdKafka\Conf();
 $conf->set('bootstrap.servers', BROKER_LIST);
@@ -39,11 +86,13 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 
 $consumer = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(TOPIC_LIST);
+$payload = '';
 $i = 0;
 while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
+            $b_sendtime =
             $payload = $message->payload;
             if (!oci_execute($stid)) {
                 echo "insert error\n";
