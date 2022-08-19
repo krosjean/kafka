@@ -45,32 +45,39 @@ $b_transferpolicyflag = '';
 $b_sumpremium = '';
 $b_artifselfpricesrat = '';
 
-oci_bind_by_name($stid1, ':p1',  $b_systemcode, 10);
-oci_bind_by_name($stid1, ':p2',  $b_sendtime,20);
-oci_bind_by_name($stid1, ':p3',  $b_msgcode, 20);
-oci_bind_by_name($stid1, ':p4',  $b_policyno, 150);
-oci_bind_by_name($stid1, ':p5',  $b_riskcode,150);
-oci_bind_by_name($stid1, ':p6',  $b_underwriteedndate, 20);
-oci_bind_by_name($stid1, ':p7',  $b_newchnltype, 192);
-oci_bind_by_name($stid1, ':p8',  $b_agentcode, 30);
-oci_bind_by_name($stid1, ':p9',  $b_agentname, 210);
-oci_bind_by_name($stid1, ':p10', $b_startdate, 20);
-oci_bind_by_name($stid1, ':p11', $b_enddate, 20);
-oci_bind_by_name($stid1, ':p12', $b_businessnature, 10);
-oci_bind_by_name($stid1, ':p13', $b_carkindcode, 4);
-oci_bind_by_name($stid1, ':p14', $b_usenaturecode, 2);
-oci_bind_by_name($stid1, ':p15', $b_licenseno, 96);
-oci_bind_by_name($stid1, ':p16', $b_modelcode, 60);
-oci_bind_by_name($stid1, ':p17', $b_frameno, 96);
-oci_bind_by_name($stid1, ':p18', $b_comcode, 30);
-oci_bind_by_name($stid1, ':p19', $b_comname, 384);
-oci_bind_by_name($stid1, ':p20', $b_appliname, 384);
-oci_bind_by_name($stid1, ':p21', $b_insuredname, 384);
-oci_bind_by_name($stid1, ':p22', $b_newpolicyflag, 1);
-oci_bind_by_name($stid1, ':p23', $b_autotransrenewflag, 1);
-oci_bind_by_name($stid1, ':p24', $b_transferpolicyflag, 1);
-oci_bind_by_name($stid1, ':p25', $b_sumpremium, 21);
-oci_bind_by_name($stid1, ':p26', $b_artifselfpricesrat, 5);
+$bind_result = true;
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p1',  $b_systemcode, 10);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p2',  $b_sendtime,20);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p3',  $b_msgcode, 20);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p4',  $b_policyno, 150);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p5',  $b_riskcode,150);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p6',  $b_underwriteedndate, 20);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p7',  $b_newchnltype, 192);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p8',  $b_agentcode, 30);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p9',  $b_agentname, 210);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p10', $b_startdate, 20);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p11', $b_enddate, 20);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p12', $b_businessnature, 10);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p13', $b_carkindcode, 4);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p14', $b_usenaturecode, 2);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p15', $b_licenseno, 96);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p16', $b_modelcode, 60);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p17', $b_frameno, 96);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p18', $b_comcode, 30);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p19', $b_comname, 384);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p20', $b_appliname, 384);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p21', $b_insuredname, 384);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p22', $b_newpolicyflag, 1);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p23', $b_autotransrenewflag, 1);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p24', $b_transferpolicyflag, 1);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p25', $b_sumpremium, 21);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p26', $b_artifselfpricesrat, 5);
+if(!$bind_result) {
+    oci_free_statement($stid1);
+    oci_close($conn);
+    echo "bind error\n";
+    exit(0);
+}
 
 $conf = new RdKafka\Conf();
 $conf->set('bootstrap.servers', BROKER_LIST);
@@ -94,7 +101,7 @@ while (true) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
             $b_sendtime =
             $payload = $message->payload;
-            if (!oci_execute($stid)) {
+            if (!oci_execute($stid1)) {
                 echo "insert error\n";
                 break 2;
             }
