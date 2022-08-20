@@ -99,8 +99,9 @@ while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
-            $b_sendtime =
+            $b_sendtime = (int)$message->timestamp;
             $payload = $message->payload;
+
             if (!oci_execute($stid1)) {
                 echo "insert error\n";
                 break 2;
@@ -119,7 +120,7 @@ while (true) {
     }
 }
 
-oci_free_statement($stid);
+oci_free_statement($stid1);
 oci_close($conn);
 $consumer->unsubscribe();
 $consumer->close();

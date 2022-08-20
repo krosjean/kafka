@@ -1,7 +1,10 @@
 <?php
-$dti = new DateTime();
-$dtz = new DateTimeZone('Asia/Shanghai');
-$dti->setTimezone($dtz);
-$dti->setTimestamp(1643385696541);
+//$dtz = new DateTimeZone('Asia/Shanghai');
+//$dti = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '1970-01-01 08:00:00', $dtz);
 
-echo $dti->format('Y-m-d H:i:s').PHP_EOL;
+$basetime = strtotime('1970-01-01 08:00:00');
+$intervals = 1660214552501;
+$newtime = strtotime("+{$intervals} ms", $basetime);
+echo $intervals.PHP_EOL.date('Y:m:d H:i:s', $newtime).PHP_EOL;
+
+//echo $dti->format('Y-m-d H:i:s').PHP_EOL;
