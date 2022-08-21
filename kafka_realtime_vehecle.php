@@ -1,4 +1,5 @@
 <?php
+/** Kafka parameters */
 const BROKER_LIST   = '9.1.187.186:9092,9.1.187.187:9092,9.1.187.188:9092,9.1.187.189:9092,9.1.187.190:9092';
 const GROUP_ID      = 'khw_kfk_3';
 const KFK_USERNAME  = 'user3700';
@@ -7,17 +8,17 @@ const TOPIC_LIST    = ['user3700NewData'];
 const SESS_TIME_OUT = '60000';
 const BLOCK_TIME    = 5000;
 
-
+/** Database parameters */
 const DEFAULTCHARSET    = 'UTF8';
 const DATABASE          = 'SDORACLE19C';
 const DBUSERNAME        = 'C##ORCL200_CUSER';
 const DBPASSWORD        = 'BLZ2lIzv3z';
-const MSG_TABLE_MAP     = ['carpolicy'=>'REALTIME_KAFKA_CAR'];
+const MSG_TABLE         = 'REALTIME_KAFKA_CAR';
 const ORACLE_BASETIME   = 28800;
 
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
 
-$stmt = 'INSERT INTO REALTIME_KAFKA_CAR VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26,:p27,:p28)';
+$stmt = 'INSERT INTO ' . MSG_TABLE . ' VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26,:p27,:p28)';
 $stid1 = oci_parse($conn, $stmt);
 
 $b_systemcode           = '';
@@ -45,9 +46,9 @@ $b_insuredname          = '';
 $b_newpolicyflag        = '';
 $b_autotransrenewflag   = '';
 $b_transferpolicyflag   = '';
-$b_sumpremium           = 0.00;
-$b_agentnetfee          = 0.00;
-$b_artifselfpricesrat   = 0.00;
+$b_sumpremium           = '';
+$b_agentnetfee          = '';
+$b_artifselfpricesrat   = '';
 
 $bind_result = true;
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p1',  $b_systemcode, 10);
@@ -75,9 +76,9 @@ $bind_result = $bind_result && oci_bind_by_name($stid1, ':p22', $b_insuredname, 
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p23', $b_newpolicyflag, 1);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p24', $b_autotransrenewflag, 1);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p25', $b_transferpolicyflag, 1);
-$bind_result = $bind_result && oci_bind_by_name($stid1, ':p26', $b_sumpremium, 21, SQLT_LNG );
-$bind_result = $bind_result && oci_bind_by_name($stid1, ':p27', $b_agentnetfee, 10, SQLT_LNG );
-$bind_result = $bind_result && oci_bind_by_name($stid1, ':p28', $b_artifselfpricesrat, 5, SQLT_LNG );
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p26', $b_sumpremium, 21);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p27', $b_agentnetfee, 21);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p28', $b_artifselfpricesrat, 5);
 if(!$bind_result) {
     oci_free_statement($stid1);
     oci_close($conn);
@@ -100,7 +101,7 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 $consumer       = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(TOPIC_LIST);
 $arr_payload    = array();
-$interval       = 0.000;
+$interval       = 0;
 $i = 0;
 while (true) {
     $message = $consumer->consume(BLOCK_TIME);
@@ -108,8 +109,8 @@ while (true) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
             $arr_payload            = json_decode($message->payload, true);
 
-            $interval               = $message->timestamp/1000;
-            $b_sendtime             = date('Y:m:d H:i:s', ORACLE_BASETIME+$interval);
+            $interval               = (int) ($message->timestamp/1000);
+            $b_sendtime             = date('Y:m:d H:i:s', ORACLE_BASETIME + $interval);
 
             $b_systemcode           = $arr_payload['payload']['systemCode'];
             $b_msgcode              = $arr_payload['payload']['msgCode'];
@@ -121,11 +122,11 @@ while (true) {
             $b_agentcode            = $arr_payload['payload']['agentComCode'];
             $b_agentname            = $arr_payload['payload']['agentComName'];
 
-            $interval               = (int)$arr_payload['payload']['startDate']/1000;
-            $b_startdate            = date('Y:m:d H:i:s', ORACLE_BASETIME+$interval);
+            $interval               = (int) ((int) $arr_payload['payload']['startDate'] / 1000);
+            $b_startdate            = date('Y:m:d H:i:s', ORACLE_BASETIME + $interval);
 
-            $interval               = (int)$arr_payload['payload']['endDate']/1000;
-            $b_enddate              = date('Y:m:d H:i:s', ORACLE_BASETIME+$interval);
+            $interval               = (int) ((int) $arr_payload['payload']['endDate'] / 1000);
+            $b_enddate              = date('Y:m:d H:i:s', ORACLE_BASETIME + $interval);
 
             $b_businessnature       = $arr_payload['payload']['businessNature'];
             $b_carkindcode          = $arr_payload['payload']['carKindCode'];
@@ -151,12 +152,8 @@ while (true) {
             }
             $consumer->commit($message);
             var_dump($arr_payload);
-            oci_free_statement($stid1);
-            oci_close($conn);
-            $consumer->unsubscribe();
-            $consumer->close();
-            exit(0);
-            break;
+            break 2;
+
         case RD_KAFKA_RESP_ERR__PARTITION_EOF:
         case RD_KAFKA_RESP_ERR__TIMED_OUT:
             break;
