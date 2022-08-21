@@ -7,43 +7,47 @@ const TOPIC_LIST    = ['user3700NewData'];
 const SESS_TIME_OUT = '60000';
 const BLOCK_TIME    = 5000;
 
+
 const DEFAULTCHARSET    = 'UTF8';
 const DATABASE          = 'SDORACLE19C';
 const DBUSERNAME        = 'C##ORCL200_CUSER';
 const DBPASSWORD        = 'BLZ2lIzv3z';
 const MSG_TABLE_MAP     = ['carpolicy'=>'REALTIME_KAFKA_CAR'];
+const ORACLE_BASETIME   = 28800;
 
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
 
-$stmt = 'INSERT INTO REALTIME_KAFKA_CAR VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26)';
+$stmt = 'INSERT INTO REALTIME_KAFKA_CAR VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26,:p27,:p28)';
 $stid1 = oci_parse($conn, $stmt);
 
-$b_systemcode = '';
-$b_sendtime = '';
-$b_msgcode = '';
-$b_policyno = '';
-$b_riskcode = '';
+$b_systemcode       = '';
+$b_sendtime         = '';
+$b_msgcode          = '';
+$b_policyno         = '';
+$b_riskcode         = '';
+$b_policysort       = '';
 $b_underwriteedndate = '';
-$b_newchnltype = '';
-$b_agentcode = '';
-$b_agentname = '';
-$b_startdate = '';
-$b_enddate = '';
-$b_businessnature = '';
-$b_carkindcode = '';
-$b_usenaturecode = '';
-$b_licenseno = '';
-$b_modelcode = '';
-$b_frameno = '';
-$b_comcode = '';
-$b_comname = '';
-$b_appliname = '';
-$b_insuredname = '';
-$b_newpolicyflag = '';
+$b_newchnltype      = '';
+$b_agentcode        = '';
+$b_agentname        = '';
+$b_startdate        = '';
+$b_enddate          = '';
+$b_businessnature   = '';
+$b_carkindcode      = '';
+$b_usenaturecode    = '';
+$b_licenseno        = '';
+$b_modelcode        = '';
+$b_frameno          = '';
+$b_comcode          = '';
+$b_comname          = '';
+$b_appliname        = '';
+$b_insuredname      = '';
+$b_newpolicyflag    = '';
 $b_autotransrenewflag = '';
 $b_transferpolicyflag = '';
-$b_sumpremium = '';
-$b_artifselfpricesrat = '';
+$b_sumpremium       = 0.00;
+$b_agentnetfee      = 0.00;
+$b_artifselfpricesrat = 0.00;
 
 $bind_result = true;
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p1',  $b_systemcode, 10);
@@ -51,6 +55,7 @@ $bind_result = $bind_result && oci_bind_by_name($stid1, ':p2',  $b_sendtime,20);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p3',  $b_msgcode, 20);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p4',  $b_policyno, 150);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p5',  $b_riskcode,150);
+$bind_result = $bind_result && oci_bind_by_name($stid1, ':p5',  $b_policysort,150);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p6',  $b_underwriteedndate, 20);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p7',  $b_newchnltype, 192);
 $bind_result = $bind_result && oci_bind_by_name($stid1, ':p8',  $b_agentcode, 30);
@@ -91,16 +96,53 @@ $conf->set('sasl.username', KFK_USERNAME);
 $conf->set('sasl.password', KFK_PASSWORD);
 $conf->set('session.timeout.ms', SESS_TIME_OUT);
 
-$consumer = new RdKafka\KafkaConsumer($conf);
+$consumer       = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(TOPIC_LIST);
-$payload = '';
+$arr_payload    = array('');
+$interval      = 0.000;
 $i = 0;
 while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
-            $b_sendtime = (int)$message->timestamp;
-            $payload = $message->payload;
+            $arr_payload    = json_decode($message, true);
+
+            $interval      = (int)$arr_payload['timestamp']/1000;
+            $b_sendtime     = date('Y:m:d H:i:s', ORACLE_BASETIME+$interval);
+
+            $b_systemcode   = $arr_payload['payload']['systemCode'];
+            $b_msgcode      = $arr_payload['payload']['msgCode'];
+            $b_policyno     = $arr_payload['payload']['policyNo'];
+            $b_riskcode     = $arr_payload['payload']['riskCode'];
+            $b_underwriteedndate = $arr_payload['payload']['underWriteEndDate'];
+            $b_newchnltype  = $arr_payload['payload']['newChnlType'];
+            $b_agentcode    = $arr_payload['payload']['agentComCode'];
+            $b_agentname    = $arr_payload['payload']['agentComName'];
+
+            $interval      = (int)$arr_payload['payload']['startDate']/1000;
+            $b_startdate    = date('Y:m:d H:i:s', ORACLE_BASETIME+$interval);
+
+            $interval      = (int)$arr_payload['payload']['endDate']/1000;
+            $b_enddate      = date('Y:m:d H:i:s', ORACLE_BASETIME+$interval);
+
+            $b_businessnature       = $arr_payload['payload']['businessNature'];
+            $b_carkindcode          = $arr_payload['payload']['carKindCode'];
+            $b_usenaturecode        = $arr_payload['payload']['useNatureCode'];
+            $b_licenseno            = $arr_payload['payload']['licenseNo'];
+            $b_modelcode            = $arr_payload['payload']['modelCode'];
+            $b_frameno              = $arr_payload['payload']['frameNo'];
+            $b_comcode              = $arr_payload['payload']['comCode'];
+            $b_comname              = $arr_payload['payload']['comName'];
+            $b_appliname            = $arr_payload['payload']['appliName'];
+            $b_insuredname          = $arr_payload['payload']['insuredName'];
+            $b_newpolicyflag        = $arr_payload['payload']['newPolicyFlag'];
+            $b_autotransrenewflag   = $arr_payload['payload']['autoTransreNewFlag'];
+            $b_transferpolicyflag   = $arr_payload['payload']['transferPolicyFlag'];
+            $b_sumpremium           = $arr_payload['payload']['sumPremium'];
+            $b_artifselfpricesrat   = $arr_payload['payload']['artifSelfPricesRat'];
+
+
+
 
             if (!oci_execute($stid1)) {
                 echo "insert error\n";
