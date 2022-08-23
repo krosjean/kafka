@@ -107,52 +107,59 @@ while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
-            $arr_payload            = json_decode($message->payload, true);
 
             $interval               = (int) ($message->timestamp/1000);
-            $b_sendtime             = date('Y:m:d H:i:s', ORACLE_BASETIME + $interval);
+            $b_sendtime             = date('Y-m-d H:i:s', ORACLE_BASETIME + $interval);
 
-            $b_systemcode           = $arr_payload['payload']['systemCode'];
-            $b_msgcode              = $arr_payload['payload']['msgCode'];
-            $b_policyno             = $arr_payload['payload']['policyNo'];
-            $b_policysort           = $arr_payload['payload']['policySort'];
-            $b_riskcode             = $arr_payload['payload']['riskCode'];
-            $b_underwriteedndate    = $arr_payload['payload']['underWriteEndDate'];
-            $b_newchnltype          = $arr_payload['payload']['newChnlType'];
-            $b_agentcode            = $arr_payload['payload']['agentComCode'];
-            $b_agentname            = $arr_payload['payload']['agentComName'];
+            $arr_payload            = json_decode($message->payload, true);
+            $b_systemcode           = $arr_payload['systemCode'];
+            $b_msgcode              = $arr_payload['msgCode'];
 
-            $interval               = (int) ((int) $arr_payload['payload']['startDate'] / 1000);
-            $b_startdate            = date('Y:m:d H:i:s', ORACLE_BASETIME + $interval);
+            /* Payload data */
+            $arr_payload            = $arr_payload['data'][0];
 
-            $interval               = (int) ((int) $arr_payload['payload']['endDate'] / 1000);
-            $b_enddate              = date('Y:m:d H:i:s', ORACLE_BASETIME + $interval);
+            $b_policyno             = $arr_payload['policyNo'];
+            $b_policysort           = $arr_payload['policySort'];
+            $b_riskcode             = $arr_payload['riskCode'];
 
-            $b_businessnature       = $arr_payload['payload']['businessNature'];
-            $b_carkindcode          = $arr_payload['payload']['carKindCode'];
-            $b_usenaturecode        = $arr_payload['payload']['useNatureCode'];
-            $b_licenseno            = $arr_payload['payload']['licenseNo'];
-            $b_modelcode            = $arr_payload['payload']['modelCode'];
-            $b_frameno              = $arr_payload['payload']['frameNo'];
-            $b_comcode              = $arr_payload['payload']['comCode'];
-            $b_comname              = $arr_payload['payload']['comName'];
-            $b_appliname            = $arr_payload['payload']['appliName'];
-            $b_insuredname          = $arr_payload['payload']['insuredName'];
-            $b_newpolicyflag        = $arr_payload['payload']['newPolicyFlag'];
-            $b_autotransrenewflag   = $arr_payload['payload']['autoTransreNewFlag'];
-            $b_transferpolicyflag   = $arr_payload['payload']['transferPolicyFlag'];
-            $b_sumpremium           = (float) $arr_payload['payload']['sumPremium'];
-            $b_agentnetfee          = (float) $arr_payload['payload']['agentNetFee'];
-            $b_artifselfpricesrat   = (float) $arr_payload['payload']['artifSelfPricesRat'];
+            $interval               = (int) ((int) $arr_payload['underWriteEndDate'] / 1000);
+            $b_underwriteedndate    = date('Y-m-d', ORACLE_BASETIME + $interval);
 
+            $b_newchnltype          = $arr_payload['newChnlType'];
+            $b_agentcode            = $arr_payload['agentComCode'];
+            $b_agentname            = $arr_payload['agentComName'];
+
+            $interval               = (int) ((int) $arr_payload['startDate'] / 1000);
+            $b_startdate            = date('Y-m-d', ORACLE_BASETIME + $interval);
+
+            $interval               = (int) ((int) $arr_payload['endDate'] / 1000);
+            $b_enddate              = date('Y-m-d', ORACLE_BASETIME + $interval);
+
+            $b_businessnature       = $arr_payload['businessNature'];
+            $b_carkindcode          = $arr_payload['carKindCode'];
+            $b_usenaturecode        = $arr_payload['useNatureCode'];
+            $b_licenseno            = $arr_payload['licenseNo'];
+            $b_modelcode            = $arr_payload['modelCode'];
+            $b_frameno              = $arr_payload['frameNo'];
+            $b_comcode              = $arr_payload['comCode'];
+            $b_comname              = $arr_payload['comName'];
+            $b_appliname            = $arr_payload['appliName'];
+            $b_insuredname          = $arr_payload['insuredName'];
+            $b_newpolicyflag        = $arr_payload['newPolicyFlag'];
+            $b_autotransrenewflag   = $arr_payload['autoTransreNewFlag'];
+            $b_transferpolicyflag   = $arr_payload['transferPolicyFlag'];
+            $b_sumpremium           = $arr_payload['sumPremium'];
+            $b_agentnetfee          = $arr_payload['agentNetFee'];
+            $b_artifselfpricesrat   = $arr_payload['artifSelfPricesRat'];
 
             if (!oci_execute($stid1)) {
+                echo $b_sendtime.PHP_EOL.$b_startdate.PHP_EOL.$b_enddate.PHP_EOL;
                 echo "insert error\n";
                 break 2;
             }
             $consumer->commit($message);
-            var_dump($arr_payload);
-            break 2;
+            echo "$b_msgcode | $b_sendtime | $b_policyno ... pushed \n";
+            break;
 
         case RD_KAFKA_RESP_ERR__PARTITION_EOF:
         case RD_KAFKA_RESP_ERR__TIMED_OUT:
