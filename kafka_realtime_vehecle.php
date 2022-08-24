@@ -93,11 +93,24 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 
 $consumer       = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(TOPIC_LIST);
+
+$datetimezone   = new DateTimeZone('Asia/Shanghai');
+$datetimeObj    = new datetime('now', $datetimezone);
+$forcemode      = $argc > 1 && in_array('/f', $argv);
+
 $arr_payload    = array();
 $timestamp      = '';
 $seconds        = '';
-$millisecond    = '';
+$milliseconds   = '';
 while (true) {
+    if (!$forcemode) {
+        $datetimeObj->setTimestamp(time());
+        if (intval($datetimeObj->format('Hi')) > 2330) {
+            echo 'Time for a break.' . PHP_EOL;
+            break;
+        }
+    }
+    
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
         case RD_KAFKA_RESP_ERR_NO_ERROR:
