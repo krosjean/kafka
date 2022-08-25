@@ -1,4 +1,7 @@
 <?php
+const ARGV_LIST = ['endtime:'];
+const DEFAULT_ENDTIME = 2330;
+
 /** Kafka parameters */
 const BROKER_LIST   = '9.1.187.186:9092,9.1.187.187:9092,9.1.187.188:9092,9.1.187.189:9092,9.1.187.190:9092';
 const GROUP_ID      = 'khw_kfk_4';
@@ -16,8 +19,23 @@ const DBPASSWORD        = 'BLZ2lIzv3z';
 const MSG_TABLE         = 'REALTIME_KAFKA';
 const ORACLE_BASETIME   = 28800;
 
-$conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
+$arr_argv = getopt('', ARGV_LIST);
 
+$datetimezone   = new DateTimeZone('Asia/Shanghai');
+try {
+    $datetimeObj = new DateTime('now', $datetimezone);
+} catch (Exception $e) {
+    echo $e->getMessage() . PHP_EOL;
+    exit();
+}
+$endtime = array_key_exists('endtime', $arr_argv) ? min(2350, max(10, intval($arr_argv['endtime']))) : DEFAULT_ENDTIME;
+if (intval($datetimeObj->format('Hi')) > $endtime) {
+    echo 'It is break time now.' . PHP_EOL;
+    exit();
+}
+
+/* Connect to database */
+$conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
 $stmt = 'INSERT INTO ' . MSG_TABLE . ' VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17)';
 $stid1 = oci_parse($conn, $stmt);
 
@@ -71,10 +89,11 @@ $conf->set('session.timeout.ms', SESS_TIME_OUT);
 
 $consumer       = new RdKafka\KafkaConsumer($conf);
 $consumer->subscribe(TOPIC_LIST);
+
 $arr_payload    = array();
 $timestamp      = '';
 $seconds        = '';
-$milliseconds    = '';
+$milliseconds   = '';
 while (true) {
     $message = $consumer->consume(BLOCK_TIME);
     switch ($message->err) {
@@ -96,22 +115,32 @@ while (true) {
             $b_riskcode             = $arr_payload['RiskCode'];
             $b_newchnltype          = $arr_payload['newChnlType'];
             $b_underwriteedndate    = $arr_payload['UnderWriteEndDate'];
-            $b_startdate            = $b_msgcode != 'endorse' ? $arr_payload['StartDate'] : $arr_payload['ValidDate'];
-            $b_enddate              = $b_msgcode != 'endorse' ? $arr_payload['EndDate'] : NULL;
             $b_exchangerate         = $arr_payload['ExchangeRate'];
             $b_coinsrate            = $arr_payload['CoinsRate'];
-            $b_sumamount            = $b_msgcode != 'endorse' ? $arr_payload['SumAmount'] : $arr_payload['ChgAmount'];
-            $b_sumpremium           = $b_msgcode != 'endorse' ? $arr_payload['SumPremium'] : $arr_payload['ChgPremium'];
-            $b_shareagentfee        = $b_msgcode != 'endorse' ? $arr_payload['shareAgentFee'] : $arr_payload['chgShareAgentFee'];
             $b_handlercode          = $arr_payload['handlercode'];
             $b_handlername          = $arr_payload['handlername'];
 
+            if ($b_msgcode != 'endorse') {
+                $b_startdate        = $arr_payload['StartDate'];
+                $b_enddate          = $arr_payload['EndDate'];
+                $b_sumamount        = $arr_payload['SumAmount'];
+                $b_sumpremium       = $arr_payload['SumPremium'];
+                $b_shareagentfee    = $arr_payload['shareAgentFee'];
+            } else {
+                $b_startdate        = $arr_payload['ValidDate'];
+                $b_enddate          = NULL;
+                $b_sumamount        = $arr_payload['ChgAmount'];
+                $b_sumpremium       = $arr_payload['ChgPremium'];
+                $b_shareagentfee    = $arr_payload['chgShareAgentFee'];
+            }
+
             if (!oci_execute($stid1)) {
-                echo "$b_msgcode | $b_sendtime | $b_businessno  ... push fails \n";
+                echo "$message->topic_name|$message->partition|$message->offset|$b_msgcode|$b_sendtime|$b_businessno  ... push fails \n";
                 break 2;
             }
+
             $consumer->commit($message);
-            echo "$b_msgcode | $b_sendtime | $b_businessno  ... pushed \n";
+            echo "$message->topic_name|$message->partition|$message->offset|$b_msgcode|$b_sendtime|$b_businessno ... pushed \n";
             break;
 
         case RD_KAFKA_RESP_ERR__PARTITION_EOF:
@@ -120,6 +149,13 @@ while (true) {
         default:
             echo "Rd error:$message->err\n{$message->errstr()}\n";
             break 2;
+    }
+
+    /* Exit if it is time for a break */
+    $datetimeObj->setTimestamp(time());
+    if (intval($datetimeObj->format('Hi')) > $endtime) {
+        echo 'Time for a break.' . PHP_EOL;
+        break;
     }
 }
 
