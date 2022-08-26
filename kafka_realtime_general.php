@@ -161,5 +161,6 @@ while (true) {
 
 oci_free_statement($stid1);
 oci_close($conn);
+
 $consumer->unsubscribe();
 $consumer->close();
