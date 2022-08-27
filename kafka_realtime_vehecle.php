@@ -34,7 +34,7 @@ if (intval($datetimeObj->format('Hi')) > $endtime) {
     exit();
 }
 
-$logfile    = $_SERVER['TEMP'] . '\\' . basename(__FILE__, '.php') . 'log';
+$logfile    = $_SERVER['TEMP'] . '\\' . basename(__FILE__, '.php') . '.log';
 $filehandle = fopen($logfile, 'a');
 fwrite($filehandle, $datetimeObj->format('Y-m-d H:i:s') . ' started' . PHP_EOL, 50);
 fclose($filehandle);
