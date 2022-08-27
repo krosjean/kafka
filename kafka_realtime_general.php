@@ -34,6 +34,11 @@ if (intval($datetimeObj->format('Hi')) > $endtime) {
     exit();
 }
 
+$logfile    = $_SERVER['TEMP'] . '\\' . basename(__FILE__, '.php') . '.log';
+$filehandle = fopen($logfile, 'a');
+fwrite($filehandle, $datetimeObj->format('Y-m-d H:i:s') . ' started' . PHP_EOL, 50);
+fclose($filehandle);
+
 /* Connect to database */
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
 $stmt = 'INSERT INTO ' . MSG_TABLE . ' VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17)';
@@ -164,3 +169,7 @@ oci_close($conn);
 
 $consumer->unsubscribe();
 $consumer->close();
+
+$filehandle = fopen($logfile, 'a');
+fwrite($filehandle, $datetimeObj->format('Y-m-d H:i:s') . ' terminated' . PHP_EOL, 50);
+fclose($filehandle);
