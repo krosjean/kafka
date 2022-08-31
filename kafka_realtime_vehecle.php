@@ -4,7 +4,7 @@ const DEFAULT_ENDTIME = 2330;
 
 /** Kafka parameters */
 const BROKER_LIST   = '9.1.187.186:9092,9.1.187.187:9092,9.1.187.188:9092,9.1.187.189:9092,9.1.187.190:9092';
-const GROUP_ID      = 'khw_kfk_5';
+const GROUP_ID      = 'khw_kfk_12';
 const KFK_USERNAME  = 'user3700';
 const KFK_PASSWORD  = 'user3700_aBwHCUnb';
 const TOPIC_LIST    = ['user3700NewData'];
@@ -41,7 +41,7 @@ fclose($filehandle);
 
 /* Connect to database */
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
-$stmt = 'INSERT INTO ' . MSG_TABLE . ' VALUES (:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26,:p27,:p28)';
+$stmt = 'INSERT INTO ' . MSG_TABLE . ' VALUES (SEQ_KAFKA.nextval,:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,:p18,:p19,:p20,:p21,:p22,:p23,:p24,:p25,:p26,:p27,:p28)';
 $stid1 = oci_parse($conn, $stmt);
 
 $b_systemcode           = '';
