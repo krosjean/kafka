@@ -9,8 +9,8 @@ const KFK_USERNAME  = 'user3700';
 const KFK_PASSWORD  = 'user3700_aBwHCUnb';
 const TOPIC_LIST    = ['user3700NewData'];
 const SESS_TIME_OUT = '60000';
-const BLOCK_TIME    = 5000;
-const MAX_POLL_INTERVAL_MS = 6000000;
+const BLOCK_TIME    = 60000;
+const MAX_POLL_INTERVAL_MS = 3600*24*1000;
 
 
 /** Database parameters */
