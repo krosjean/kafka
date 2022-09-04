@@ -14,7 +14,11 @@ const KFK_PASSWORD  = 'user3700_aBwHCUnb';
 const TOPIC_LIST    = ['user3700'];
 const SESS_TIME_OUT = '60000';
 const BLOCK_TIME    = 60000;
+<<<<<<< HEAD
 const MAX_POLL_INTERVAL_MS = 3600 * 2 * 1000;
+=======
+const MAX_POLL_INTERVAL_MS = 3600*24*1000;
+>>>>>>> 270711955b1be75c280dd54007a7af9789c1eda1
 
 /** Database parameters */
 const DEFAULTCHARSET    = 'UTF8';
@@ -58,7 +62,7 @@ $b_businessno           = '';
 $b_comcode              = '';
 $b_riskcode             = '';
 $b_newchnltype          = '';
-$b_underwriteedndate    = '';
+$b_underwriteenddate    = '';
 $b_startdate            = '';
 $b_enddate              = '';
 $b_exchangerate         = '';
@@ -76,7 +80,7 @@ oci_bind_by_name($stid1, ':p4',  $b_businessno, 50);
 oci_bind_by_name($stid1, ':p5',  $b_comcode, 10);
 oci_bind_by_name($stid1, ':p6',  $b_riskcode,12);
 oci_bind_by_name($stid1, ':p7',  $b_newchnltype, 16);
-oci_bind_by_name($stid1, ':p8',  $b_underwriteedndate, 20);
+oci_bind_by_name($stid1, ':p8',  $b_underwriteenddate, 20);
 oci_bind_by_name($stid1, ':p9',  $b_startdate, 20);
 oci_bind_by_name($stid1, ':p10', $b_enddate, 20);
 oci_bind_by_name($stid1, ':p11', $b_exchangerate, 11);
