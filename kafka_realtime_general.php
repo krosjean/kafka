@@ -14,11 +14,7 @@ const KFK_PASSWORD  = 'user3700_aBwHCUnb';
 const TOPIC_LIST    = ['user3700'];
 const SESS_TIME_OUT = '60000';
 const BLOCK_TIME    = 60000;
-<<<<<<< HEAD
 const MAX_POLL_INTERVAL_MS = 3600 * 2 * 1000;
-=======
-const MAX_POLL_INTERVAL_MS = 3600*24*1000;
->>>>>>> 270711955b1be75c280dd54007a7af9789c1eda1
 
 /** Database parameters */
 const DEFAULTCHARSET    = 'UTF8';
