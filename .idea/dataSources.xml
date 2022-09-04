@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="ORCL200_CUSER" uuid="6d798ab4-14e5-4637-bba8-3b7cdba8f8bd">
+      <driver-ref>oracle.19</driver-ref>
+      <synchronize>true</synchronize>
+      <auto-commit>false</auto-commit>
+      <jdbc-driver>oracle.jdbc.OracleDriver</jdbc-driver>
+      <jdbc-url>jdbc:oracle:thin:@SDORACLE19C</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="TNSADMIN_DIR" value="f:\app\client\clic\product\19.0.0\client_1\network\admin\" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="SDFS" uuid="be99fb98-6444-4c66-b43d-319b9bd3581b">
+      <driver-ref>oracle.19</driver-ref>
+      <synchronize>true</synchronize>
+      <auto-commit>false</auto-commit>
+      <jdbc-driver>oracle.jdbc.OracleDriver</jdbc-driver>
+      <jdbc-url>jdbc:oracle:thin:@SDIND21</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="TNSADMIN_DIR" value="f:\app\client\clic\product\19.0.0\client_1\network\admin\" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>

@@ -1,4 +1,8 @@
 <?php
+/** KAFKA 实时消息处理-全险种承保   build 202209  khwarezmi    last changed  20220904 14:20 
+ ** based on edenhill/librdkafka 1.6.2
+**/
+
 const ARGV_LIST = ['endtime:'];
 const DEFAULT_ENDTIME = 2330;
 
@@ -9,8 +13,8 @@ const KFK_USERNAME  = 'user3700';
 const KFK_PASSWORD  = 'user3700_aBwHCUnb';
 const TOPIC_LIST    = ['user3700'];
 const SESS_TIME_OUT = '60000';
-const BLOCK_TIME    = 5000;
-const MAX_POLL_INTERVAL_MS = 6000000;
+const BLOCK_TIME    = 60000;
+const MAX_POLL_INTERVAL_MS = 3600 * 2 * 1000;
 
 /** Database parameters */
 const DEFAULTCHARSET    = 'UTF8';
@@ -36,6 +40,7 @@ if (intval($datetimeObj->format('Hi')) > $endtime) {
     exit();
 }
 
+// Write log file
 $logfile    = $_SERVER['TEMP'] . '\\' . basename(__FILE__, '.php') . '.log';
 $filehandle = fopen($logfile, 'a');
 fwrite($filehandle, $datetimeObj->format('Y-m-d H:i:s') . ' started' . PHP_EOL, 50);
@@ -43,7 +48,7 @@ fclose($filehandle);
 
 /* Connect to database */
 $conn = oci_pconnect(DBUSERNAME, DBPASSWORD, DATABASE, DEFAULTCHARSET);
-$stmt = "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX($msg_table, realtimekafka1) APPEND_VALUES */ INTO $msg_table VALUES  (SEQ_KAFKA.nextval,:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,current_timestamp)";
+$stmt = "INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX($msg_table, realtimekafka1) APPEND_VALUES */ INTO $msg_table VALUES (SEQ_KAFKA.nextval,:p1,:p2,:p3,:p4,:p5,:p6,:p7,:p8,:p9,:p10,:p11,:p12,:p13,:p14,:p15,:p16,:p17,current_timestamp)";
 $stid1 = oci_parse($conn, $stmt);
 
 $b_systemcode           = '';
